@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '*.zip'
       - 'package.json'
       - 'src/**'
       - 'public/**'
@@ -20,11 +21,19 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+      - name: Extract uploaded project archive
+        shell: bash
+        run: |
+          shopt -s nullglob
+          archives=( *.zip )
+          if [ ${#archives[@]} -gt 0 ]; then
+            unzip -oq "${archives[0]}" -d .
+          fi
+          test -f package.json || { echo "Project archive is missing package.json"; exit 1; }
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Install dependencies
         run: npm install
       - name: Build production app
